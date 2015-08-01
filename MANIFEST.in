@@ -1,0 +1,2 @@
+include versioneer.py
+include media_mapper/_version.py

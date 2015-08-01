@@ -1,0 +1,12 @@
+seaborn
+ggplot
+plotly
+
+nose
+simplejson
+pygeocoder
+
+pymysql
+pymssql
+pg8000
+pymongo
