@@ -28,9 +28,6 @@ config = {
     'cmdclass': versioneer.get_cmdclass(),
     
     'install_requires': [
-    'numpy',
-    'pandas',
-    'nose',
     'tweepy'
     ],
 
