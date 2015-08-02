@@ -31,6 +31,7 @@ config = {
     'numpy',
     'pandas',
     'nose',
+    'tweepy'
     ],
 
     'packages': find_packages(),#['media_mapper'],
