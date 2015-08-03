@@ -44,7 +44,8 @@ class StdOutListener(StreamListener):
 
     def on_error(self, status):
         print("ERROR")
-        print(status)
+        print(status), 'sleeping for one minute'
+        time.sleep(60) 
 
 
 # ###Run Script.
@@ -86,7 +87,7 @@ def write_stream(out_file, production = False, stop = 1000, locations = [-122.75
         auth.set_access_token(media_mapper.keys.TWITTER_ACCESS_TOKEN, media_mapper.keys.TWITTER_TOKEN_SECRET)
 
         #Connect to the Twitter stream
-        stream = Stream(auth, l, timeout=60)
+        stream = Stream(auth, l, timeout=90)
 
         #Terms to track
         #stream.filter(track = key_words_list) #track=["oxford","london","wolverhampton"])
