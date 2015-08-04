@@ -5,3 +5,5 @@ sudo apt-get install python-dev
 
 
 sudo pip install tweepy
+sudo pip install python-instagram
+sudo pip install boto
