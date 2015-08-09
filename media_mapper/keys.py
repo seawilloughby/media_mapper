@@ -23,6 +23,11 @@ initailized.
 
 import os
 
+#MAPBOX
+try:
+	MAPBOX_API_KEY = os.environ['MAPBOX_API_KEY']
+except:
+	print 'MAPBOX_API_KEY not found.'
 #TWITTER
 try:
 	TWITTER_CONSUMER_KEY = os.environ['TWITTER_CONSUMER_KEY']

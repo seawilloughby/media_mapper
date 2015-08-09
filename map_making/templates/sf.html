@@ -18,10 +18,10 @@
 	<div id='map'></div>
 	<script type="text/javascript">
 
-		// var api_key = 
 
-		var api_key = 'pk.eyJ1IjoiZHJ4dHdpbG9iIiwiYSI6ImZjMjZjYzQ3YmY5ZjE4NDc3ZDViMTUxOTVlZWE5OTNhIn0.FATHrIpd5ik0thTRRHXJOQ';
+		var api_key = '{{api_key | safe}}';
 		L.mapbox.accessToken = api_key;
+		
 		var map = L.mapbox.map('map', 'mapbox.light')
 		    .setView([37.7833, -122.4167], 12);
 	
