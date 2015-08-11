@@ -205,6 +205,22 @@ def plot_neighborhoods(df,  column_labels='geoid10', x_colname ='hour', y_colnam
     ax.legend()
     plt.show()
 
+def merge_shapes_with_dataframe(df):
+    '''imports sql shape files for san francisco. Adds them to a dataframe based on the shared 'geoid10' column.
+    Also assmes a 'tweetcnt' column. Returns the new dataframe'''
+    ###Retrieve the Shape Files for Each Block:
+    geodf = pd.read_csv('/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/sf_only_sql_shapes.csv')
+    #format the dataframe
+    geodf['geoid10'] = geodf.geoid10.astype('str')
+    geodf.drop('Unnamed: 0', axis = 1, inplace = True)
+    
+    #df['geoid10'] =df['geoid10'].apply(lambda x: x[1:])
+    #create a new dataframe 
+    df = pd.merge(geodf, df, on='geoid10', how='outer')
+    #fill no tweets with a zero value
+    df.tweetcnt.fillna(0, inplace = True)
+    #drop empty hour columns
+    return df
 
 #CLUSTERING FUNCTIONS
 
