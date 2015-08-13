@@ -41,6 +41,19 @@ def get_mega_dataframe(filepath, columns = ['coordinates', 'text', 'timestamp_ms
     return df
 
 
+def retrieve_and_merge_tweet_data():
+    '''Retrieves twitter geo data from SQL, and tweet text that has been tokenized. 
+    Returns the merged dataframe.'''
+    #get SF Data From SQL
+    df = mm.pipeline.retrieve_sql_tweets('tweets_with_geoV6')
+    #get text data from picke
+    dftxt = pd.read_csv('../../data/intermediate_data/json_tweets_in_df_twitokend.csv')
+    df = df.set_index('id')
+    dftxt = dftxt.set_index('id')
+    dfall = df.join(dftxt).reset_index()
+    dfall.drop('Unnamed: 0', 1, inplace = True)
+    return dfall
+
 #FUNCTIONS TO CLEAN DATAFRAME OF TWEETS
 
 def exract_coordinates_from_tweets(df, outfile = 'data/intermediate_data/jsontweets_in_df.pkl'):
@@ -173,7 +186,7 @@ def retrieve_sql_tweets(tablename):
     return pd.read_sql(map_query, conn)
 
 
-#ADD DATE VARIABLES TO A DATAFRAM FROM A TIMESTAMP 
+#ADD DATE VARIABLES TO A DATAFRAME FROM A TIMESTAMP 
 
 def transform_timestamp(df, date = True, hour = False, DOW = False ):
     """Takes a dataframe with a 'timestamp_ms' column. Creates additionall columns of date, hour, or day of week.
@@ -213,8 +226,8 @@ def merge_shapes_with_dataframe(df):
     #format the dataframe
     geodf['geoid10'] = geodf.geoid10.astype('str')
     geodf.drop('Unnamed: 0', axis = 1, inplace = True)
-    
-    #df['geoid10'] =df['geoid10'].apply(lambda x: x[1:])
+
+    df['geoid10'] =df['geoid10'].apply(lambda x: x[1:])
     #create a new dataframe 
     df = pd.merge(geodf, df, on='geoid10', how='outer')
     #fill no tweets with a zero value
