@@ -45,9 +45,9 @@ def retrieve_and_merge_tweet_data():
     '''Retrieves twitter geo data from SQL, and tweet text that has been tokenized. 
     Returns the merged dataframe.'''
     #get SF Data From SQL
-    df = mm.pipeline.retrieve_sql_tweets('tweets_with_geoV6')
+    df = retrieve_sql_tweets('tweets_with_geoV6')
     #get text data from picke
-    dftxt = pd.read_csv('../../data/intermediate_data/json_tweets_in_df_twitokend.csv')
+    dftxt = pd.read_csv('../data_pipeline/data/intermediate_data/json_tweets_in_df_twitokend.csv')
     df = df.set_index('id')
     dftxt = dftxt.set_index('id')
     dfall = df.join(dftxt).reset_index()
