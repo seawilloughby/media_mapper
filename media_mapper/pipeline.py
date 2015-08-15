@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 #FUNCTIONS TO TURN TWEET JSON FILES INTO PANDAS DATAFRAME
 
 def json_to_df(filename, columns = None):
-    '''Takes in a json file (such as tweets). Returns a pandas dataframe'''
+    '''INPUT: filename - a json file (such as tweets). 
+      OUTPUT: pandas dataframe'''
+    
     with open(filename, 'r') as f:
         l = f.readlines()
     try:
@@ -24,39 +26,87 @@ def json_to_df(filename, columns = None):
         else:
             df = pd.DataFrame(data)
 
+    #handle cases where the file is empty
     except Exception as e:
         print e, filename
         df = pd.DataFrame(None)
+    
     return df
 
 def get_mega_dataframe(filepath, columns = ['coordinates', 'text', 'timestamp_ms', 'id']):
-    '''Takes a filepath to a directory of json files for twitterdata.
-    Reads every file into a pandas dataframe. Calls helper function json_to_df.
-    Returns a mega-dataframe of all the json files appended together.
-    Saves a copy of the '''
+    '''Reads a directory of json files into one pandas dataframe.
+
+    INPUT: filepath - a directory json twitterdata.
+    OUTPUT: a pandas dataframe
+    '''
+    #create a list of every json file in a directory
     tweet_files= glob.glob(filepath)
+    #read files into a list of dataframes 
     df_list = [json_to_df(tf, columns=columns) for tf in tweet_files]
+    #remove empty dataframes
     df_list = [df for df in df_list if df is not None]
     df = pd.concat(df_list).reset_index(drop = True)
+    
     return df
 
+def retrieve_shapefiles(outfile = 'data/sf_only_sql_shapes.csv'):
+    '''Retrieves SF neighborhood shapefiles from the SQL database. Saves the
+    dataframe to the folder give by outfile'''
+    
+    #connect to postgress 
+    conn_dict = {'dbname':'zipfiantwitter', 'user':'clwilloughby', 'password': '', 'host':'/tmp'}
+    conn = psycopg2.connect(dbname=conn_dict['dbname'], user=conn_dict['user'], host='/tmp')
+    cur = conn.cursor()
 
-def retrieve_and_merge_tweet_data():
-    '''Retrieves twitter geo data from SQL, and tweet text that has been tokenized. 
-    Returns the merged dataframe.'''
+    map_query = """
+            SELECT
+                    DISTINCT
+                    ST_asGEOJSON(wkb_geometry) geometry
+                    , geoid10
+
+                    FROM sf_neighb 
+                    WHERE countyfp10 = '075'
+                    ;"""
+
+    return pd.read_sql(map_query, conn)
+
+
+def retrieve_sql_tweets(table_name):
+    '''Connects to zipfiantwitter database. 
+    Extracts the twitter data with geoid10, and returns it as a dataframe.'''
+    conn_dict = {'dbname':'zipfiantwitter', 'user':'clwilloughby', 'password': '', 'host':'/tmp'}
+    conn = psycopg2.connect(dbname=conn_dict['dbname'], user=conn_dict['user'], host='/tmp')
+    cur = conn.cursor()
+    map_query = """
+    SELECT timestamp_ms, geoid10, id
+    FROM %s
+                    ;""" %table_name
+    return pd.read_sql(map_query, conn)
+
+
+def retrieve_and_merge_tweet_data(table_name = 'tweets_with_geoV6', tweet_text_file='/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/json_tweets_in_df_twitokend.csv' ):
+    '''
+    Querys SQL to retreive a table (tablename) and merges that table with a csv (tweet_text_file)
+    on the 'id' column. Rejoins a twitter table with geometry information in SQL with
+    corresponding tokenized tweet text.
+    
+    INPUT:  a) tablename - the name of the SQL table to query.
+            b) tweet_text_file - the filepath to a csv containing an id  column. 
+    OUTPUT: A merged pandas dataframe. '''
+    
     #get SF Data From SQL
-    df = retrieve_sql_tweets('tweets_with_geoV6')
-    #get text data from picke
-    dftxt = pd.read_csv('../data_pipeline/data/intermediate_data/json_tweets_in_df_twitokend.csv')
-    df = df.set_index('id')
-    dftxt = dftxt.set_index('id')
-    dfall = df.join(dftxt).reset_index()
-    dfall.drop('Unnamed: 0', 1, inplace = True)
-    return dfall
+    df_sql = retrieve_sql_tweets(table_name)
+    #get tokenized text data 
+    ds_tokens = pd.read_csv(tweet_text_file)
+    df_sql = df_sql.set_index('id')
+    ds_tokens = ds_tokens.set_index('id')
+    df = df_sql.join(ds_tokens).reset_index()
+    df.drop('Unnamed: 0', 1, inplace = True)
+    return df
 
 #FUNCTIONS TO CLEAN DATAFRAME OF TWEETS
 
-def exract_coordinates_from_tweets(df, outfile = 'data/intermediate_data/jsontweets_in_df.pkl'):
+def exract_coordinates_from_tweets(df, outfile = '/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/jsontweets_in_df.pkl'):
     '''Takes in a pandas dataframe of json tweets with coordinates.
     Extracts lattitude and longtidue.
     Returns a smaller dataframe with columns: Text, Coordinates, timestamp.
@@ -85,6 +135,7 @@ def pop_text(df):
     no_dup.pop('text')
 
 #TEXT MANIPULATIO OF TWITTER DATA
+
 #A. remove punctuation
 def clean_text_for_sql(df):
     '''Takes in a dataframe with a text column containing emoticons, ect. 
@@ -97,7 +148,7 @@ def clean_text_for_sql(df):
     return df[ordered_colums]
 
 #B. tokenize with a twitter-specific tokenizer
-def twokenize_text(df, outfile = 'data/intermediate_data/jsontweets_in_df_twitokend.csv'):
+def twokenize_text(df, outfile = '/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/jsontweets_in_df_twitokend.csv'):
     '''Takes in a dataframe with a text column containing emoticons, ect. 
     Returns a dataframe where the text has been striped of punctuation and repeats
     Also reorders the columns to fit the order I want for SQL'''
@@ -123,73 +174,12 @@ def tokenize_text_nltk(text):
     return text_lisy
 
 
-#PLACE TWITTER DATA IN SQL. USE TO GET GEO COORDINATES
-def create_tweet_table_sql(df, tablename='tweetsv4', remove_text_column = True):
-    ''' Insersts a dataframe into SQL, but remoces the text column if True,and returns the text and id dataframe. '''
-    if remove_text_column == True:
-        tweettext_df = df[['text', 'id']]
-        df.pop('text')
-        engine = create_engine('postgresql://clwilloughby:christy@localhost:5432/zipfiantwitter')
-        df.to_sql(tablename, engine, if_exists='replace')
-        return tweettext_df
-    else:
-        engine = create_engine('postgresql://clwilloughby:christy@localhost:5432/zipfiantwitter')
-        df.to_sql(tablename, engine, if_exists='replace')
-
-def format_tweet_table_sql(tweet_table='tweetsv3' , new_geo_tweet_table = 'tweets_with_geo'):
-    '''Takes an existing twitter table (tweet_table). Adds a geo column, and fills with the proper geoid.
-    Filters out tweets that are not in SF county, and creates a table with tweet information, and relevant
-    geojason information (new_geo_tweet_table). '''
-
-    conn = psycopg2.connect(dbname='zipfiantwitter', user ='clwilloughby', host = '/tmp')
-    c = conn.cursor()
-
-    query = """ SELECT AddGeometryColumn(%s,'geom',4326,'POINT',2);""" %tweet_table
-    c.execute(query)
-    conn.commit()
-
-    conn = psycopg2.connect(dbname='zipfiantwitter', user ='clwilloughby', host = '/tmp')
-    c = conn.cursor()
-    query = """UPDATE %s SET geom = ST_SetSRID(ST_MakePoint(lons, lats), 4326);""" %tweet_table 
-    c.execute(query)
-    conn.commit()            
-
-    conn = psycopg2.connect(dbname='zipfiantwitter', user ='clwilloughby', host = '/tmp')
-    c = conn.cursor()
-    query = """SELECT UpdateGeometrySRID('sf_neighb', 'wkb_geometry', 4326);""" 
-    c.execute(query)
-    conn.commit() 
-
-    conn = psycopg2.connect(dbname='zipfiantwitter', user ='clwilloughby', host = '/tmp')
-    c = conn.cursor()
-    query = """ SELECT points.*, polys.geoid10
-                    INTO %s 
-                    FROM sf_neighb polys
-                    JOIN %s points 
-                    ON (ST_Within(points.geom,polys.wkb_geometry) AND
-                    polys.countyfp10 = '075');""" %(new_geo_tweet_table, tweet_table)
-    c.execute(query)
-    conn.commit()
-    conn.close()
- 
-
-def retrieve_sql_tweets(tablename):
-    '''Connects to zipfiantwitter database. Need to hard code table to extract.
-    Extracts the twitter data with geoid10, and returns it as a dataframe.'''
-    conn_dict = {'dbname':'zipfiantwitter', 'user':'clwilloughby', 'password': '', 'host':'/tmp'}
-    conn = psycopg2.connect(dbname=conn_dict['dbname'], user=conn_dict['user'], host='/tmp')
-    cur = conn.cursor()
-    map_query = """
-    SELECT timestamp_ms, geoid10, id
-    FROM %s
-                    ;""" %tablename
-    return pd.read_sql(map_query, conn)
 
 
 #ADD DATE VARIABLES TO A DATAFRAME FROM A TIMESTAMP 
 
 def transform_timestamp(df, date = True, hour = False, DOW = False ):
-    """Takes a dataframe with a 'timestamp_ms' column. Creates additionall columns of date, hour, or day of week.
+    """Takes a dataframe with a 'timestamp_ms' column. Creates additional columns of date, hour, or day of week.
     Returns the dataframe with added columns."""
 
     df['time'] = df['timestamp_ms'].values.astype(int).astype('datetime64[ms]')
@@ -198,6 +188,51 @@ def transform_timestamp(df, date = True, hour = False, DOW = False ):
         df['hour']= pd.DatetimeIndex(df["time"]).hour
     if DOW == True:
         df['DOW']= pd.DatetimeIndex(df["time"]).dayofweek
+    return df
+
+#CONVERT TWEETS TO A RATE PER HOUR
+
+def tweet_rate_by_hour(df, dow = False):
+    '''
+    INPUT: Dataframe with unqiue entries for tweets,and a timestamp.
+
+    Calculates tweets rate per hour and drops extra columns (including tweet id)
+
+    OUTPUT: If dow is false, will return a dataframe grouped only by hour. 
+            If dow is true, will return a dataframe grouped by weekend(0) or weekday (1).
+    '''
+    
+    df = transform_timestamp(df, hour = True, dow = False)
+
+    #column of ones serves as a counter for number of tweets during group bys
+    df['twt_cnt'] = 1
+    #group by hour, so we have the total tweets for every hour
+    df = df.groupby(['geoid10', 'date', 'hour']).agg(np.sum).reset_index().drop('id', 1)
+    #At this point, the twt_count is the number of tweets for every hour 
+    df['twt_rate'] = df['twt_cnt']
+    
+    if dow == True: 
+        #group by date for the average tweet rate every day
+        df = df.groupby(['geoid10', 'date', 'DOW']).agg(np.mean).reset_index()
+        df.drop('hour',1, inplace = True)
+        df.drop('twt_cnt',1, inplace = True)    
+        df['wknd']=df['DOW'].where(df['DOW'] > 5) 
+        df['wkday'] = df['wknd'].isnull().astype(int)
+        df.drop('DOW', 1, inplace = True)
+        df.drop('wknd', 1, inplace = True)
+        #final groupby to get an average count for week days or weekends 
+        df = df.groupby(['geoid10', 'wkday']).agg(np.mean).reset_index()
+
+    else:
+        #groupby geoid and hour to get the average rate for every hour
+        df = df.groupby(['geoid10', 'hour']).agg(np.mean).reset_index()
+        df.drop('DOW', 1, inplace = True)
+        df.drop('twt_cnt', 1, inplace = True )  
+        df['hr_bin'] = pd.cut(df.hour, bins = 5, labels = ['latenight', 'dawn','morning','afternoon','evening'])
+        df = df.groupby(['geoid10', 'hr_bin']).agg(np.mean).reset_index().drop('hour', 1)
+   
+
+    
     return df
 
 
@@ -220,7 +255,7 @@ def plot_neighborhoods(df,  column_labels='geoid10', x_colname ='hour', y_colnam
 
 def merge_shapes_with_dataframe(df):
     '''imports sql shape files for san francisco. Adds them to a dataframe based on the shared 'geoid10' column.
-    Also assmes a 'tweetcnt' column. Returns the new dataframe'''
+    Also assumes a 'tweetcnt' column. Returns the new dataframe'''
     ###Retrieve the Shape Files for Each Block:
     geodf = pd.read_csv('/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/sf_only_sql_shapes.csv')
     #format the dataframe

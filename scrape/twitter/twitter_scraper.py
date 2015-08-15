@@ -1,13 +1,5 @@
 
-# coding: utf-8
-
-# In[5]:
-
-import media_mapper  #has my secret keys
-
-
-# In[6]:
-
+import media_mapper  #package which contains the API keys for twitter
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
@@ -16,8 +8,9 @@ import sys
 import time
 import os
 
+'''code modified from Stream Lister Libray : http://
 
-# In[19]:
+Once initialized from the command line, script continues to run until manually stopped by the operator'''
 
 class StdOutListener(StreamListener):
 
@@ -26,6 +19,7 @@ class StdOutListener(StreamListener):
         self.production = production
         self.counter = 0
         self.stop = stop
+    
     #This function gets called every time a new tweet is received on the stream
     def on_data(self, data):
         #Just write data to one line in the file
@@ -123,12 +117,10 @@ if __name__=='__main__':
                          production = production, 
                          stop = stop, 
                          locations = [-122.75,36.66,-122.35,37.82])
-
+        
+        #if the stream is interrupted, restart the script
         except Exception as e:
-            print e#continue
-
-
-# In[ ]:
+            print e #continue
 
 
 
