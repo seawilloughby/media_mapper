@@ -190,50 +190,6 @@ def transform_timestamp(df, date = True, hour = False, DOW = False ):
         df['DOW']= pd.DatetimeIndex(df["time"]).dayofweek
     return df
 
-#CONVERT TWEETS TO A RATE PER HOUR
-
-def tweet_rate_by_hour(df, dow = False):
-    '''
-    INPUT: Dataframe with unqiue entries for tweets,and a timestamp.
-
-    Calculates tweets rate per hour and drops extra columns (including tweet id)
-
-    OUTPUT: If dow is false, will return a dataframe grouped only by hour. 
-            If dow is true, will return a dataframe grouped by weekend(0) or weekday (1).
-    '''
-    
-    df = transform_timestamp(df, hour = True, dow = False)
-
-    #column of ones serves as a counter for number of tweets during group bys
-    df['twt_cnt'] = 1
-    #group by hour, so we have the total tweets for every hour
-    df = df.groupby(['geoid10', 'date', 'hour']).agg(np.sum).reset_index().drop('id', 1)
-    #At this point, the twt_count is the number of tweets for every hour 
-    df['twt_rate'] = df['twt_cnt']
-    
-    if dow == True: 
-        #group by date for the average tweet rate every day
-        df = df.groupby(['geoid10', 'date', 'DOW']).agg(np.mean).reset_index()
-        df.drop('hour',1, inplace = True)
-        df.drop('twt_cnt',1, inplace = True)    
-        df['wknd']=df['DOW'].where(df['DOW'] > 5) 
-        df['wkday'] = df['wknd'].isnull().astype(int)
-        df.drop('DOW', 1, inplace = True)
-        df.drop('wknd', 1, inplace = True)
-        #final groupby to get an average count for week days or weekends 
-        df = df.groupby(['geoid10', 'wkday']).agg(np.mean).reset_index()
-
-    else:
-        #groupby geoid and hour to get the average rate for every hour
-        df = df.groupby(['geoid10', 'hour']).agg(np.mean).reset_index()
-        df.drop('DOW', 1, inplace = True)
-        df.drop('twt_cnt', 1, inplace = True )  
-        df['hr_bin'] = pd.cut(df.hour, bins = 5, labels = ['latenight', 'dawn','morning','afternoon','evening'])
-        df = df.groupby(['geoid10', 'hr_bin']).agg(np.mean).reset_index().drop('hour', 1)
-   
-
-    
-    return df
 
 
 #HANDY PLOTTING FUNCTIONS
