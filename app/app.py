@@ -10,12 +10,19 @@ import media_mapper.keys
 app = Flask(__name__)
 api_key = media_mapper.keys.MAPBOX_API_KEY
 
+#load data from kmeans clustering
+in_file = open('data/clustergeo_k6.json','r')
+kmeans = json.load(in_file)
+in_file.close()
+kmeans = json.dumps(kmeans)
 
-in_file = open('data/afternoon.json','r')
+#load data from overal tweet density
+in_file = open('data/wordcloud.json','r')
 wordcld = json.load(in_file)
 in_file.close()
-
 wordcld = json.dumps(wordcld)
+
+
 # use decorators to link the function to a url
 @app.route('/')
 def home():
@@ -27,8 +34,7 @@ def index():
 
 @app.route('/post.html')
 def first_post():
-    
-	return render_template('post.html' )# render a template
+	return render_template('post.html' , kmeans = kmeans, api_key = api_key )# render a template
 
 
 @app.route('/contact.html')
