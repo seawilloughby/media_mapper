@@ -22,6 +22,10 @@ wordcld = json.load(in_file)
 in_file.close()
 wordcld = json.dumps(wordcld)
 
+in_file = open('data/test_times/weekend.json','r')
+weekend = json.load(in_file)
+in_file.close()
+weekend = json.dumps(weekend)
 
 # use decorators to link the function to a url
 @app.route('/')
@@ -39,7 +43,7 @@ def first_post():
 
 @app.route('/contact.html')
 def contact():
-	return render_template('contact.html')  
+	return render_template('contact.html', weekend = weekend, api_key = api_key )  
 
 @app.route('/about.html')
 def about():

@@ -1,15 +1,13 @@
 media_mapper
 =====================================================================================================
 
-<img align="right" src="docs/pictures/cover.jpeg" height="575" width="1400">
 
-media_mapper is a template for a setting up a general python package
 
 Links
 -----
-[Installation](docs/md/installation.md)
+[App](docs/md/installation.md)
 
-[Versioning](docs/md/versioning.md)
+[Scripts](docs/md/versioning.md)
 
 [Documentation](docs/md/documentation.md)
 

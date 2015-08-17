@@ -111,6 +111,7 @@ def generate_wordcloud(df, outpath ='../../app/static/wrdcld/'):
         tokens = df.tokens[idx]
         #don't generate a word cloud if there are no tokens.
         try:
+            #remove links 
             tokens = [re.sub(r'http.*$', '', item) for item in tokens]
             wordcloud = WordCloud(min_font_size = 6,font_step = 1,  \
                      background_color = 'white', scale= 1 ).generate(' '.join(tokens))

@@ -11,44 +11,6 @@ import matplotlib.pyplot as plt
 
 
 
-#FUNCTIONS TO TURN TWEET JSON FILES INTO PANDAS DATAFRAME
-
-def json_to_df(filename, columns = None):
-    '''INPUT: filename - a json file (such as tweets). 
-      OUTPUT: pandas dataframe'''
-    
-    with open(filename, 'r') as f:
-        l = f.readlines()
-    try:
-        data = [json.loads(s) for s in l]
-        if columns:
-            df = pd.DataFrame(data)[columns]
-        else:
-            df = pd.DataFrame(data)
-
-    #handle cases where the file is empty
-    except Exception as e:
-        print e, filename
-        df = pd.DataFrame(None)
-    
-    return df
-
-def get_mega_dataframe(filepath, columns = ['coordinates', 'text', 'timestamp_ms', 'id']):
-    '''Reads a directory of json files into one pandas dataframe.
-
-    INPUT: filepath - a directory json twitterdata.
-    OUTPUT: a pandas dataframe
-    '''
-    #create a list of every json file in a directory
-    tweet_files= glob.glob(filepath)
-    #read files into a list of dataframes 
-    df_list = [json_to_df(tf, columns=columns) for tf in tweet_files]
-    #remove empty dataframes
-    df_list = [df for df in df_list if df is not None]
-    df = pd.concat(df_list).reset_index(drop = True)
-    
-    return df
-
 def retrieve_shapefiles(outfile = 'data/sf_only_sql_shapes.csv'):
     '''Retrieves SF neighborhood shapefiles from the SQL database. Saves the
     dataframe to the folder give by outfile'''
@@ -141,10 +103,12 @@ def clean_text_for_sql(df):
     '''Takes in a dataframe with a text column containing emoticons, ect. 
     Returns a dataframe where the text has been striped of punctuation and repeats
     Orders columns in this format: timestamp_ms, text, lats, lons'''
+    
     df = extract_columns(df)
     df['text'] = [re.sub('[^A-Za-z0-9]+', ' ',s)for s in df.text.tolist()]
     df.columns.tolist()          
     ordered_colums = [ 'timestamp_ms', 'text', 'lats', 'lons' ]
+    
     return df[ordered_colums]
 
 #B. tokenize with a twitter-specific tokenizer

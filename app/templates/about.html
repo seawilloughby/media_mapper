@@ -143,13 +143,12 @@
 
   // get color depending on population density value
   function getColor(d) {
-      return d > 7 ? '#8c2d04' :
-          d > 6  ? '#cc4c02' :
-          d > 5  ? '#ec7014' :
-          d > 4  ? '#fe9929' :
-          d > 3   ? '#fec44f' :
-          d > 2   ? '#fee391' :
-          d > 1   ? '#fff7bc' :
+      return d > 5 ? '#8c2d04' :
+          d > 4  ? '#cc4c02' :
+          d > 3  ? '#ec7014' :
+          d > 2  ? '#fe9929' :
+          d > 1   ? '#fec44f' :
+          d > 0   ? '#fee391' :
           '#ffffe5';
   }
 
@@ -205,7 +204,7 @@
   map.legendControl.addLegend(getLegendHTML());
 
   function getLegendHTML() {
-    var grades = [0, 1, 2, 3, 4, 5, 6, 7],
+    var grades = [0, 1, 2, 3, 4, 5],
     labels = [],
     from, to;
 
