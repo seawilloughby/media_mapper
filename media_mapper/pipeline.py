@@ -209,23 +209,25 @@ def plot_neighborhoods(df,  column_labels='geoid10', x_colname ='hour', y_colnam
     ax.legend()
     plt.show()
 
+
 def merge_shapes_with_dataframe(df):
     '''
-    INPUT: pandas dataframe with a geoid column ('geoid10'). 
-    OUTPUT: merges the current dataframe with the corresponding geographical
-            coordinates for each neighborhood block in the 'geoid10' column.
-            Returns the altered dataframe.'''
-
-    ###retrieve the shape files for each block:
-    geodf = pd.read_csv('../data_pipeline/data/intermediate_data/sf_only_sql_shapes.csv')
-    #format the dataframe
-    geodf['geoid10'] = geodf.geoid10.astype('str')
-    geodf.drop('Unnamed: 0', axis = 1, inplace = True)
-    df['geoid10'] =df['geoid10'].apply(lambda x: x[1:])
+    INPUT: A dataframe containing tweet data and the geoid
+            for each tweet. 
+            Merges dataframe with a csv containing the corresponding 
+            shape file for each goid.
+    OUPUT: A pandas dataframe containing the geoid and coordinates for each 
+            neighborhood block in San Francisco.''' 
     
+    ###Retrieve the Shape Files for Each Block:
+    geo_df = pd.read_csv('/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/sf_only_sql_shapes.csv')
+    #format the dataframe
+    geo_df['geoid10'] = geo_df.geoid10.astype('str')
+    geo_df.drop('Unnamed: 0', axis = 1, inplace = True)
+
+    df['geoid10'] =df['geoid10'].apply(lambda x: x[1:])
     #create a new dataframe 
-    df = pd.merge(geodf, df, on='geoid10', how='outer')
-    #drop empty hour columns
+    df = pd.merge(geo_df, df, on='geoid10', how='outer')
     return df
 
 #CLUSTERING FUNCTIONS

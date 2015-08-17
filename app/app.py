@@ -11,7 +11,7 @@ app = Flask(__name__)
 api_key = media_mapper.keys.MAPBOX_API_KEY
 
 #load data from kmeans clustering
-in_file = open('data/clustergeo_k6.json','r')
+in_file = open('data/kmeans6_geo.json','r')
 kmeans = json.load(in_file)
 in_file.close()
 kmeans = json.dumps(kmeans)

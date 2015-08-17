@@ -58,9 +58,7 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="index.html">Home</a>
-                    </li>
+                    
                     <li>
                         <a href="about.html">tweet density</a>
                     </li>
@@ -68,7 +66,7 @@
                         <a href="post.html">tweet rythms</a>
                     </li>
                     <li>
-                        <a href="contact.html">Contact</a>
+                        <a href="contact.html">contact</a>
                     </li>
                 </ul>
             </div>
@@ -161,19 +159,19 @@
           opacity: 0.1,
           color: 'black',
           fillOpacity: 0.7,
-          fillColor: getColor(feature.properties.tweetrate)
+          fillColor: getColor(feature.properties.clusters)
       };
   }
 
-  // get color depending on population density value
+  // get color depending cluster
   function getColor(d) {
-      return d > 5 ? '#8c2d04' :
-          d > 4  ? '#cc4c02' :
-          d > 3  ? '#ec7014' :
-          d > 2  ? '#fe9929' :
-          d > 1   ? '#fec44f' :
-          d > 0   ? '#fee391' :
-          '#ffffe5';
+      return d > 5 ? '#E1B700' :
+          d > 4  ? '#FF76BC' :
+          d > 3  ? '#00D8CC' :
+          d > 2  ? '#91D100' :
+          d > 1   ? '#56C5FF' :
+          d > 0   ? '#E1B700' :
+          '#FF76BC';
   }
 
   function onEachFeature(feature, layer) {
@@ -195,7 +193,7 @@
 
 
       popup.setLatLng(e.latlng);
-      popup.setContent('<div class="marker-title" > ' +'<center>'+  layer.feature.properties.tweetrate + ' tweets per hour' + '</center>' + '</div>' );
+      popup.setContent('<div class="marker-title" > ' + '<center><b>cluster#' + layer.feature.properties.clusters+ '<p>' + layer.feature.properties.label + '</p></b> ' + '</div>'+ '<p> popular words:</p></center>' +  layer.feature.properties.top_ten );
 
 
       if (!popup._map) popup.openOn(map);
