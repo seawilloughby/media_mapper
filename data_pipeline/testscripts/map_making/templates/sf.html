@@ -1,0 +1,40 @@
+<html>
+<head>
+	<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.js'></script>
+	<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.9/mapbox.css' rel='stylesheet' />
+
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+
+	<style type="text/css">
+	  #map { position:absolute; top:0; bottom:0; width:100%; }
+	</style>
+
+</head>
+
+<body>
+
+
+	<div id='map'></div>
+	<script type="text/javascript">
+
+
+		var api_key = '{{api_key | safe}}';
+		L.mapbox.accessToken = api_key;
+		
+		var map = L.mapbox.map('map', 'mapbox.light')
+		    .setView([37.7833, -122.4167], 12);
+	
+	geo_json_variable = {{ sf_cong_113 | safe}} 
+
+	layer = L.geoJson(geo_json_variable, {
+						    style: function(feature) {
+						    	return {fillColor: feature.properties.hexcolor, weight: '1', fillOpacity: '.75'};
+								    				}
+						}).addTo(map);
+
+	</script>
+
+
+</body>
+</html>
