@@ -33,7 +33,7 @@ Using the shape of blocks also allowed me to bin tweets together in similar regi
 
 ####Tweet Density
 I wanted to map where people are most active in San Francisco. High density of tweets could suggest areas of interest.
-I calcualted the average number of tweets per hour for each san francisco neighborhood.
+I calculated the average number of tweets per hour for each san francisco neighborhood.
 
 I further binned the data into different chunks of the day, and into weekday or weekend activity.
 I made this decision by plotting the frequency of tweets over time for all of san francisco, and for a couple of randomly selected neighborhoods. There was quite a bit of variety in tweet activity, but there were clear daily and weekly cycles, as would be expcted based on the activities of humans. 
