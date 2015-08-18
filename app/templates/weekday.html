@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>chattermapper</title>
+
+    <!-- MAPBOX INFO -->
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.css' rel='stylesheet' />
+    <style>
+      body { margin:20%; padding:0; overflow: hidden;}
+      #map { position:absolute; top:15%; bottom:10%; width:80%; height:70%}
+    </style>
+
+
+    
+    <!-- Bootstrap Core CSS -->
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="../static/css/clean-blog.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">chattermapper</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    
+                    <li>
+                        <a href="about.html">tweet clouds</a>
+                    </li>
+                    <li>
+                        <a href="post.html">tweet rythms</a>
+                    </li>
+                    <li>
+                        <a href="contact.html">tweets by day</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header class="intro-header" style="background-image: url('../static/img/about-bg.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="page-heading">
+                        
+                        <hr class="small">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+<div class="container fill"; position= 'relative';>
+        
+ <!-- Dropping in My Map Information -->   
+<div id='map'></div>
+
+<style>
+.map-legend .swatch {
+  width:20px;
+  height:20px;
+  float:left;
+  margin-right:10px;
+  }
+.leaflet-popup-close-button {
+  display: none;
+  }
+.leaflet-popup-content-wrapper {
+  pointer-events: none;
+  }
+</style>
+<script>
+  var api_key = '{{api_key | safe}}'
+    L.mapbox.accessToken = api_key;
+
+  var map = L.mapbox.map('map', 'mapbox.light')
+    .setView([37.7833, -122.4167], 12);
+
+  var popup = new L.Popup({ autoPan: false });
+
+  // statesData comes from the 'us-states.js' script included above
+  geo_json_variable = {{ weekday | safe}}
+
+  var statesLayer = L.geoJson(geo_json_variable,  {
+      style: getStyle,
+      onEachFeature: onEachFeature
+  }).addTo(map);
+
+  function getStyle(feature) {
+      return {
+          weight: 2,
+          opacity: 0.1,
+          color: 'black',
+          fillOpacity: 0.7,
+          fillColor: getColor(feature.properties.tweetrate)
+      };
+  }
+
+  // get color depending on population density value
+  function getColor(d) {
+      return d > 80 ? '#E65100' :
+          d > 60  ? '#F57F17' :
+          d > 40  ? '#F9A825' :
+          d > 20  ? '#FDD835' :
+          d > 10   ? '#FFF59D' :
+          d > 0   ? '#FFFDE7' :
+          '#FFFDE7';
+  }
+
+  function onEachFeature(feature, layer) {
+      if (feature.properties && feature.properties.image) {
+        layer.bindPopup(feature.properties.image)
+      }
+      layer.on({
+          mousemove: mousemove,
+          mouseout: mouseout,
+          click: zoomToFeature
+
+      });
+  }
+
+  var closeTooltip;
+  
+
+  function mousemove(e) {
+      var layer = e.target;
+
+
+      popup.setLatLng(e.latlng);
+      popup.setContent('<div class="marker-title" > ' + '<center><b>cluster#' + layer.feature.properties.clusters+ '<p>' + layer.feature.properties.label + '</p></b> ' + '</div>'+ '<p> popular words:</p></center>' +  layer.feature.properties.top_ten );
+
+
+      if (!popup._map) popup.openOn(map);
+      window.clearTimeout(closeTooltip);
+
+      // highlight feature
+      layer.setStyle({
+          weight: 3,
+          opacity: 0.3,
+          fillOpacity: 0.9
+      });
+
+      if (!L.Browser.ie && !L.Browser.opera) {
+          layer.bringToFront();
+      }
+  }
+
+  function mouseout(e) {
+      statesLayer.resetStyle(e.target);
+      closeTooltip = window.setTimeout(function() {
+          map.closePopup();
+      }, 100);
+  }
+
+  function zoomToFeature(e) {
+      map.fitBounds(e.target.getBounds());
+  }
+
+  map.legendControl.addLegend(getLegendHTML());
+
+  function getLegendHTML() {
+    var grades = [0, 10, 20, 40, 60, 80],
+    labels = [],
+    from, to;
+
+    for (var i = 0; i < grades.length; i++) {
+      from = grades[i];
+      to = grades[i + 1];
+
+      labels.push(
+        '<li><span class="swatch" style="background:' + getColor(from + 1) + '"></span> ' +
+        from + (to ? '&ndash;' + to : '+')) + '</li>';
+    }
+
+    return '<span><b>Tweets per Hour</b></span><ul>' + labels.join('') + '</ul>';
+  }
+
+</script>
+
+    </div>
+    </div>
+
+    <hr>
+</div>
+
+       <footer>
+        <div class="container">
+            <div class="row">
+            <p></p>
+            </div>
+            
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="{{ url_for('static', filename='js/clean-blog.min.js') }}"></script>
+
+</body>
+
+</html>
