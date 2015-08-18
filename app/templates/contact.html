@@ -60,13 +60,13 @@
                 <ul class="nav navbar-nav navbar-right">
                     
                     <li>
-                        <a href="about.html">tweet density</a>
+                        <a href="about.html">tweet clouds</a>
                     </li>
                     <li>
                         <a href="post.html">tweet rythms</a>
                     </li>
                     <li>
-                        <a href="contact.html">contact</a>
+                        <a href="contact.html">tweets by day</a>
                     </li>
                 </ul>
             </div>
@@ -146,7 +146,7 @@
   var popup = new L.Popup({ autoPan: false });
 
   // statesData comes from the 'us-states.js' script included above
-  geo_json_variable = {{ weekend | safe}}
+  geo_json_variable = {{ weekday | safe}}
 
   var statesLayer = L.geoJson(geo_json_variable,  {
       style: getStyle,
@@ -165,13 +165,13 @@
 
   // get color depending cluster
   function getColor(d) {
-      return d > 100 ? '#8c2d04' :
-          d > 50  ? '#cc4c02' :
-          d > 20  ? '#ec7014' :
-          d > 10  ? '#fe9929' :
-          d > 5   ? '#fec44f' :
-          d > 0   ? '#fee391' :
-          '#ffffe5';
+      return d > 100 ? '#E65100' :
+          d > 50  ? '#F57F17' :
+          d > 20  ? '#F9A825' :
+          d > 10  ? '#FDD835' :
+          d > 5   ? '#FFF59D' :
+          d > 0   ? '#FFFDE7' :
+          '#FFFDE7';
   }
 
   function onEachFeature(feature, layer) {
@@ -254,7 +254,7 @@
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                     
-                    <p class="copyright text-muted">Copyright &copy; chattermapper 2015</p>
+                    
                 </div>
             </div>
         </div>

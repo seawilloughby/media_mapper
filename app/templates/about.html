@@ -17,7 +17,7 @@
     <link href='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.css' rel='stylesheet' />
     <style>
       body { margin:20%; padding:0; overflow: hidden;}
-      #map { position:absolute; top:15%; bottom:10%; width:80%; height:65%}
+      #map { position:absolute; top:15%; bottom:10%; width:80%; height:70%}
     </style>
 
 
@@ -63,13 +63,13 @@
                 <ul class="nav navbar-nav navbar-right">
                     
                     <li>
-                        <a href="about.html">tweet density</a>
+                        <a href="about.html">tweet clouds</a>
                     </li>
                     <li>
                         <a href="post.html">tweet rythms</a>
                     </li>
                     <li>
-                        <a href="contact.html">about</a>
+                        <a href="contact.html">tweets by day</a>
                     </li>
                 </ul>
             </div>
@@ -143,13 +143,13 @@
 
   // get color depending on population density value
   function getColor(d) {
-      return d > 5 ? '#8c2d04' :
-          d > 4  ? '#cc4c02' :
-          d > 3  ? '#ec7014' :
-          d > 2  ? '#fe9929' :
-          d > 1   ? '#fec44f' :
-          d > 0   ? '#fee391' :
-          '#ffffe5';
+      return d > 5 ? '#E65100' :
+          d > 4  ? '#F57F17' :
+          d > 3  ? '#F9A825' :
+          d > 2  ? '#FDD835' :
+          d > 1   ? '#FFF59D' :
+          d > 0   ? '#FFFDE7' :
+          '#FFFDE7';
   }
 
   function onEachFeature(feature, layer) {
@@ -172,7 +172,7 @@
 
 
       popup.setLatLng(e.latlng);
-      popup.setContent('<div class="marker-title" > ' +'<center>'+  layer.feature.properties.tweetrate + ' tweets per hour' + '</center>' + '</div>' + '<img src="' + layer.feature.properties.image + '" WIDTH=300 HEIGHT = 200 ALT = "no tweets with information"/>' + layer.feature.properties.geoid);
+      popup.setContent('<div class="marker-title" > ' +'<center>'+  layer.feature.properties.tweetrate + ' tweets per hour' + '</center>' + '</div>' + '<img src="' + layer.feature.properties.image + '" WIDTH=275 HEIGHT = 200 ALT = "no tweets with information"/>' );
 
 
       if (!popup._map) popup.openOn(map);
@@ -231,7 +231,7 @@
        <footer>
         <div class="container">
             <div class="row">
-            <p>The activity of tweets across San Francisco varies quite considerably from block to block. The rate of tweets every hour is mapped by color intensity. Hover over a block to see the most common words associated with each region!</p>
+            <p></p>
             </div>
             
         </div>

@@ -22,15 +22,20 @@ wordcld = json.load(in_file)
 in_file.close()
 wordcld = json.dumps(wordcld)
 
-in_file = open('data/test_times/weekend.json','r')
+in_file = open('data/time/weekend.json','r')
 weekend = json.load(in_file)
 in_file.close()
 weekend = json.dumps(weekend)
 
+in_file = open('data/time/weekday.json','r')
+weekday = json.load(in_file)
+in_file.close()
+weekday = json.dumps(weekday)
+
 # use decorators to link the function to a url
 @app.route('/')
 def home():
-    return render_template('index.html')   # render a template
+    return render_template('index.html')   #
 
 @app.route('/index.html')
 def index():
@@ -38,16 +43,19 @@ def index():
 
 @app.route('/post.html')
 def first_post():
-	return render_template('post.html' , kmeans = kmeans, api_key = api_key )# render a template
-
+	return render_template('post.html' , kmeans = kmeans, api_key = api_key )
 
 @app.route('/contact.html')
 def contact():
-	return render_template('contact.html', weekend = weekend, api_key = api_key )  
+	return render_template('contact.html', weekday = weekday, api_key = api_key )  
 
 @app.route('/about.html')
 def about():
 	return render_template('about.html', wordcld = wordcld, api_key = api_key) 
+
+
+
+
 # @app.route('/marketing')
 # def marketing():
 # 	return render_template('marketing.html')
