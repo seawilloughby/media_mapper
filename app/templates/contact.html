@@ -10,20 +10,13 @@
     <meta name="author" content="">
 
     <title>chattermapper</title>
-    <!-- MAPBOX INFO -->
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.js'></script>
-    <link href='https://api.mapbox.com/mapbox.js/v2.2.1/mapbox.css' rel='stylesheet' />
-    <style>
-      body { margin:20%; padding:0; overflow: hidden;}
-      #map { position:absolute; top:15%; bottom:10%; width:80%; height:65%}
-    </style>
+
 
     <!-- Bootstrap Core CSS -->
-    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="../static/css/clean-blog.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/clean-blog.min.css') }}" rel="stylesheet">
 
     <!-- Custom Fonts -->
     <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
@@ -66,7 +59,7 @@
                         <a href="post.html">tweet rythms</a>
                     </li>
                     <li>
-                        <a href="contact.html">weekend tweets</a>
+                        <a href="contact.html">tweets by day</a>
                     </li>
                 </ul>
             </div>
@@ -77,14 +70,15 @@
 
     <!-- Page Header -->
     <!-- Set your background image for this header on the line below. -->
-    <header class="intro-header" style="background-image: url('../static/img/post-bg.jpg')">
+    <header class="intro-header" style="background-image: url({{ url_for('static', filename='img/contact-bg.jpg') }})">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                    <div class="page-heading">
-                        <h1>Tweet Activity Patters</h1>
+                    <div class="site-heading">
+                        <h1>
+                        </h1>
                         <hr class="small">
-                        <span class="subheading">How Active Are Blocks Over Time?</span>
+                        <span class="subheading" ></span>
                     </div>
                 </div>
             </div>
@@ -96,22 +90,9 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-                    <p>K_means clustering, a form of unsupervised machine learning, was used to uncover different categories of twitter activity over time. </p>
-
-                    <p>Blocks are grouped together based on tweet activity at similar times of day. </p>
-
                     
 
-                    <h2 class="section-heading">Conclusions</h2>
-
-                    <p>Was there a differencE?</p>
-
-                    <p>Maybe.</p>
-
-                    
-                    <h2 class="section-heading">Future Aspects</h2>
-
-                    <p>AI coudl do more things. This is overwhleming</p>
+                    <h2 class="section-heading"><center>See the Difference Between Weekends and Weekdays</center></h2>
 
                    
                 </div>
@@ -120,126 +101,6 @@
     </article>
 <div class="container">
             <div class="row">
-<div id='map'></div>
-
-<style>
-.map-legend .swatch {
-  width:20px;
-  height:20px;
-  float:left;
-  margin-right:10px;
-  }
-.leaflet-popup-close-button {
-  display: none;
-  }
-.leaflet-popup-content-wrapper {
-  pointer-events: none;
-  }
-</style>
-<script>
-  var api_key = '{{api_key | safe}}'
-    L.mapbox.accessToken = api_key;
-
-  var map = L.mapbox.map('map', 'mapbox.light')
-    .setView([37.7833, -122.4167], 12);
-
-  var popup = new L.Popup({ autoPan: false });
-
-  // statesData comes from the 'us-states.js' script included above
-  geo_json_variable = {{ weekday | safe}}
-
-  var statesLayer = L.geoJson(geo_json_variable,  {
-      style: getStyle,
-      onEachFeature: onEachFeature
-  }).addTo(map);
-
-  function getStyle(feature) {
-      return {
-          weight: 2,
-          opacity: 0.1,
-          color: 'black',
-          fillOpacity: 0.7,
-          fillColor: getColor(feature.properties.tweetrate)
-      };
-  }
-
-  // get color depending cluster
-  function getColor(d) {
-      return d > 100 ? '#E65100' :
-          d > 50  ? '#F57F17' :
-          d > 20  ? '#F9A825' :
-          d > 10  ? '#FDD835' :
-          d > 5   ? '#FFF59D' :
-          d > 0   ? '#FFFDE7' :
-          '#FFFDE7';
-  }
-
-  function onEachFeature(feature, layer) {
-      if (feature.properties && feature.properties.image) {
-        layer.bindPopup(feature.properties.image)
-      }
-      layer.on({
-          mousemove: mousemove,
-          mouseout: mouseout,
-          click: zoomToFeature
-
-      });
-  }
-
-  var closeTooltip;
-
-  function mousemove(e) {
-      var layer = e.target;
-
-
-      popup.setLatLng(e.latlng);
-      popup.setContent('<div class="marker-title" > ' + '<center><b>' + layer.feature.properties.tweetrate+ ' tweets per day </b><p> Popular Words: </p><p>' + layer.feature.properties.top_ten + '</p>' + '</div>'+ '</center>' );
-
-
-      if (!popup._map) popup.openOn(map);
-      window.clearTimeout(closeTooltip);
-
-      // highlight feature
-      layer.setStyle({
-          weight: 3,
-          opacity: 0.3,
-          fillOpacity: 0.9
-      });
-
-      if (!L.Browser.ie && !L.Browser.opera) {
-          layer.bringToFront();
-      }
-  }
-
-  function mouseout(e) {
-      statesLayer.resetStyle(e.target);
-      closeTooltip = window.setTimeout(function() {
-          map.closePopup();
-      }, 100);
-  }
-
-  function zoomToFeature(e) {
-      map.fitBounds(e.target.getBounds());
-  }
-
-  map.legendControl.addLegend(getLegendHTML());
-
-  function getLegendHTML() {
-    var grades = [0, 5, 10, 20, 50, 100],
-    labels = [],
-    from, to;
-
-    for (var i = 0; i < grades.length; i++) {
-      from = grades[i];
-      to = grades[i + 1];
-
-      labels.push(
-        '<li><span class="swatch" style="background:' + getColor(from + 1) + '"></span> ' +
-        from + (to ? '&ndash;' + to : '+')) + '</li>';
-    }
-
-    return '<span><b>Tweets per Day</b></span><ul>' + labels.join('') + '</ul>';
-  }
 
 
 </script>
@@ -247,7 +108,33 @@
             </div>
 
     <hr>
+ <hr>
+                <div class="post-preview">
+                    <a href="weekday.html">
+                        <h2 class="post-title">
+                            <center>weekday map</center>
+                        </h2>
+                        <h3 class="post-subtitle">
+                             
+                        </h3>
+                    </a>
+                    
+                </div>
+                <hr>
 
+                 <hr>
+                <div class="post-preview">
+                    <a href="weekend.html">
+                        <h2 class="post-title" >
+                            <center>weekend map</center>
+                        </h2>
+                        <h3 class="post-subtitle">
+                             
+                        </h3>
+                    </a>
+                    
+                </div>
+                <hr>
     <!-- Footer -->
     <footer>
         <div class="container">

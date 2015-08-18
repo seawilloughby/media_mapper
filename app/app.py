@@ -47,16 +47,21 @@ def first_post():
 
 @app.route('/contact.html')
 def contact():
-	return render_template('contact.html', weekday = weekend, api_key = api_key )  
+	return render_template('contact.html' )  
 
 @app.route('/about.html')
 def about():
 	return render_template('about.html', wordcld = wordcld, api_key = api_key) 
 
 
-app.route('/test.html')
-def test():
-	return render_template('test.html') 
+@app.route('/weekday.html')
+def weekday():
+    return render_template('weekday.html', weekday = weekday, api_key = api_key) 
+
+
+@app.route('/weekend.html')
+def weekend():
+    return render_template('weekend.html', weekend = weekend, api_key = api_key) 
 
 # @app.route('/marketing')
 # def marketing():
@@ -64,4 +69,4 @@ def test():
 
 # start the server with the 'run()' method
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port=6979, debug=True)
