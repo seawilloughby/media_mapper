@@ -47,14 +47,16 @@ def first_post():
 
 @app.route('/contact.html')
 def contact():
-	return render_template('contact.html', weekday = weekday, api_key = api_key )  
+	return render_template('contact.html', weekday = weekend, api_key = api_key )  
 
 @app.route('/about.html')
 def about():
 	return render_template('about.html', wordcld = wordcld, api_key = api_key) 
 
 
-
+app.route('/test.html')
+def test():
+	return render_template('test.html') 
 
 # @app.route('/marketing')
 # def marketing():
