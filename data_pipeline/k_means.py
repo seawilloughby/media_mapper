@@ -16,7 +16,7 @@ def modified_clean_and_run_kmeans(numberofclusters = 6, run_kmeans = True, plt_s
     '''Loads a dataframe, and then calls a a function to run k-means using sklearn. 
     Has Special additions to take out outliers I previously found.
     
-    Arguments:
+    PARAMETERS:
     1) numberofclusters: the number of clusters (k)
     2) run_kmeans: 
         True: If run_kmeans is True, calls the function run_k_means. 
@@ -31,7 +31,7 @@ def modified_clean_and_run_kmeans(numberofclusters = 6, run_kmeans = True, plt_s
      '''
     
     #obtain tiwtter data 
-    df = mm.pipeline.retrieve_sql_tweets('tweets_with_geoV6')
+    df = mm.pipeline.retrieve_sql_tweets('tweets_with_geo')
     #generate datetime columns to help with cleaning
     df = mm.pipeline.transform_timestamp(df, hour = True, DOW = True)
     
@@ -58,14 +58,17 @@ def modified_clean_and_run_kmeans(numberofclusters = 6, run_kmeans = True, plt_s
     dfhr = pivot_table(dfhr, 'hr_bin', column_prefix = 'hrbin_')
     dfkmeans = pd.merge(dfhr, dfwk, left_on = 'geoid10', right_on = 'wkday_').drop('wkday_', 1)
     #reorder the columns 
-    dfkmeans = dfkmeans[['geoid10','wkday_0','wkday_1','hrbin_morning','hrbin_afternoon','hrbin_evening',
-     'hrbin_latenight','hrbin_dawn']]
+    dfkmeans = dfkmeans[['geoid10','wkday_0','wkday_1','hrbin_morning',
+                        'hrbin_afternoon','hrbin_evening',
+                        'hrbin_latenight','hrbin_dawn']]
     #fill missing values with zeroes 
     dfkmeans.fillna(0, inplace = True)
     if run_kmeans == True:
-        kmeans, geoid_dict, cluster_dict = run_k_means(dfkmeans, numberofclusters, plot_silouette = plt_silouette)
+        kmeans, geoid_dict, cluster_dict = run_k_means(dfkmeans, numberofclusters, \
+                                            plot_silouette = plt_silouette)
         for k, v in cluster_dict.iteritems():
-            print k,'\n number of neighborhoods: ', len(v), '\n', dfkmeans[dfkmeans['geoid10'].isin(v)].mean(),'\n','\n'
+            print k,'\n number of neighborhoods: ', len(v), '\n', \
+                    dfkmeans[dfkmeans['geoid10'].isin(v)].mean(),'\n','\n'
         return kmeans, geoid_dict, cluster_dict, dfkmeans 
     else:
         return dfkmeans
@@ -75,13 +78,14 @@ def modified_clean_and_run_kmeans(numberofclusters = 6, run_kmeans = True, plt_s
 
 def tweet_rate_by_hour(df, dow = False):
     '''
-    INPUT: Dataframe with unqiue entries for tweets, and a datetime column. Drops the id column
+    INPUT: Dataframe with unqiue entries for tweets, and a datetime column. Drops the id column.
     
     Calculates tweets rate per hour.
 
     OUTPUT: If dow is false, will return a dataframe grouped only by hour. 
             If dow is true, will return a dataframe grouped by weekend(0) or weekday (1).
     '''
+    
     #column of ones serves as a counter for number of tweets during group bys
     df['twt_cnt'] = 1
     #group by hour, so we have the total tweets for every hour
@@ -94,7 +98,8 @@ def tweet_rate_by_hour(df, dow = False):
         df = df.groupby(['geoid10', 'hour']).agg(np.mean).reset_index()
         df.drop('DOW', 1, inplace = True)
         df.drop('twt_cnt', 1, inplace = True )  
-        df['hr_bin'] = pd.cut(df.hour, bins = 5, labels = ['latenight', 'dawn','morning','afternoon','evening'])
+        df['hr_bin'] = pd.cut(df.hour, bins = 5, labels = ['latenight', 'dawn',
+                                                'morning','afternoon','evening'])
         df = df.groupby(['geoid10', 'hr_bin']).agg(np.mean).reset_index().drop('hour', 1)
    
     else: dow == True:
@@ -127,15 +132,12 @@ def pivot_table(df, timevariable, column_prefix ):
     df['geoid10'] = df['hr_bin']
     return df
 
-
 #RUN K-MEANS WITH STRANGE GEOIDS REMOVED 
-
-
 
 def run_k_means(df, numberclusters, geoidlabel ='geoid10', plot_silouette = True):
 	'''Uses sklearn to run kmeans. 
 	
-	INPUT:
+	ARGUMENTS:
 	1) df: A dataframe with a geoid column
 	2) geoidlabel: the label of the geoid column. 
 	3) plot_silouette: whether or not to plot the silouettes of each cluster
@@ -158,15 +160,12 @@ def run_k_means(df, numberclusters, geoidlabel ='geoid10', plot_silouette = True
 	geoid_dict = defaultdict(int)
 	cluster_dict = defaultdict(list)
 
-
-
 	#Transforms x into a cluster-distance space. 
 	#In this array, each column is a cluster with the value of the distance from 
 	#a given neighborhood block (geoid) in each row. 
 	#This function returns the cluster belonging to each neighborhood block:
 		#the cluster with the smallest distance value 
 	assigned_cluster = kmeans.transform(x).argmin(axis=1)
-
 
 	for i in range(kmeans.n_clusters):
 	    cluster = np.arange(0, x.shape[0])[assigned_cluster==i]
@@ -195,15 +194,16 @@ def save_dictionary_as_csv(dictionary, outfile):
     w.writeheader()
     w.writerow(dictionary)
 
-
 #VISUALIZE K-MEANS GENERATED CLUSTERS
 
 def print_top_cluster_features(df_kmeans, cluster_dict, kmeans_model):
-	'''INPUT:   df_kmeans - a dataframe formatted to run k-means analysis
-				cluster_dict - a dictionary. the key is the cluster
-							the value is a list of geoids that belong in the cluster
-				kmeans_model - the fit sklean model 
-		OUTPUT: a print out of the top features for each cluster, and a summary
+	'''PARAMETERS:   
+    df_kmeans - a dataframe formatted to run k-means analysis
+	cluster_dict - a dictionary. the key is the cluster the value is a list 
+                of geoids that belong in the cluster
+	kmeans_model - the fit sklean model 
+	
+    OUTPUT: a print out of the top features for each cluster, and a summary
 				of the average tweet rate for each cluster in each category. 
 
 	'''
@@ -223,9 +223,11 @@ def print_top_cluster_features(df_kmeans, cluster_dict, kmeans_model):
 
 def plot_clusters(df_kmeans, cluster_dict):
     '''
-    INPUT: df_kmeans - a dataframe formated for k-means analysis.
-           cluster_dict - a dictionary with each cluster uncovered by
+    PARAMETERS: 
+    df_kmeans - a dataframe formated for k-means analysis.
+    cluster_dict - a dictionary with each cluster uncovered by
            k means as the key, and a list of associated geoids as the values.
+    
     OUTPUT:  Plots the tweet rate over time for each cluster.'''
     
     num_clust = len(cluster_dict.keys())
@@ -338,8 +340,6 @@ def retrieve_and_merge_tweet_data():
     dfall = df.join(dftxt).reset_index()
     dfall.drop('Unnamed: 0', 1, inplace = True)
     return dfall
-
-
 
 def top_tokens(corpus_list, stopwrds=stopwords, number=10):
     '''Takes a list of tokens. Returns the top ten, unless a different number given.'''

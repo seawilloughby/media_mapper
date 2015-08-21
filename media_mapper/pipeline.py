@@ -10,31 +10,8 @@ from media_mapper import twokenizer
 import matplotlib.pyplot as plt
 
 
-
-def retrieve_shapefiles(outfile = 'data/sf_only_sql_shapes.csv'):
-    '''Retrieves SF neighborhood shapefiles from the SQL database. Saves the
-    dataframe to the folder give by outfile'''
-    
-    #connect to postgress 
-    conn_dict = {'dbname':'zipfiantwitter', 'user':'clwilloughby', 'password': '', 'host':'/tmp'}
-    conn = psycopg2.connect(dbname=conn_dict['dbname'], user=conn_dict['user'], host='/tmp')
-    cur = conn.cursor()
-
-    map_query = """
-            SELECT
-                    DISTINCT
-                    ST_asGEOJSON(wkb_geometry) geometry
-                    , geoid10
-
-                    FROM sf_neighb 
-                    WHERE countyfp10 = '075'
-                    ;"""
-
-    return pd.read_sql(map_query, conn)
-
-
-def retrieve_sql_tweets(table_name):
-    '''Connects to zipfiantwitter database. 
+def retrieve_sql_tweets(table_name = 'tweets_with_geo'):
+    '''Connects to zipfiantwitter PostgreSQL database. 
     Extracts the twitter data with geoid10, and returns it as a dataframe.'''
     conn_dict = {'dbname':'zipfiantwitter', 'user':'clwilloughby', 'password': '', 'host':'/tmp'}
     conn = psycopg2.connect(dbname=conn_dict['dbname'], user=conn_dict['user'], host='/tmp')
@@ -46,14 +23,16 @@ def retrieve_sql_tweets(table_name):
     return pd.read_sql(map_query, conn)
 
 
-def retrieve_and_merge_tweet_data(table_name = 'tweets_with_geoV6', tweet_text_file='/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/json_tweets_in_df_twitokend.csv' ):
+def retrieve_and_merge_tweet_data(table_name = 'tweets_with_geo', tweet_text_file='/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/json_tweets_in_df_twitokend.csv' ):
     '''
-    Querys SQL to retreive a table (tablename) and merges that table with a csv (tweet_text_file)
-    on the 'id' column. Rejoins a twitter table with geometry information in SQL with
-    corresponding tokenized tweet text.
+    Querys PostgreSQL to retreive a table (tablename) and merges that table with a csv 
+    (tweet_text_file) on the 'id' column. Rejoins a twitter table with geometry information 
+    in PostgreSQL withcorresponding tokenized tweet text.
     
-    INPUT:  a) tablename - the name of the SQL table to query.
-            b) tweet_text_file - the filepath to a csv containing an id  column. 
+    PARAMETERS:  
+    tablename - the name of the PostgreSQL table to query.
+    tweet_text_file - the filepath to a csv containing an 'id' column. 
+    
     OUTPUT: A merged pandas dataframe. '''
     
     #get SF Data From SQL
@@ -66,67 +45,23 @@ def retrieve_and_merge_tweet_data(table_name = 'tweets_with_geoV6', tweet_text_f
     df.drop('Unnamed: 0', 1, inplace = True)
     return df
 
-#FUNCTIONS TO CLEAN DATAFRAME OF TWEETS
-
-def exract_coordinates_from_tweets(df, outfile = '/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/jsontweets_in_df.pkl'):
-    '''Takes in a pandas dataframe of json tweets with coordinates.
-    Extracts lattitude and longtidue.
-    Returns a smaller dataframe with columns: Text, Coordinates, timestamp.
-    Also saves a copy to a csv at the given outfile'''
-    #only include rows with coordinates
-    df = df[~df['coordinates'].isnull()]
-    #make a new dataframe with coordinates, tweets, and timestamps
-    df = df[['coordinates', 'text' ,'timestamp_ms', 'id']]
-    #get a list of coordinates to break it into long and lat data
-    coor = df.coordinates.tolist()
-    #list of the longitude coordinates
-    lons = [c['coordinates'][0] for c in coor]
-    #list of the latitude coordinates 
-    lats = [c['coordinates'][1] for c in coor]
-    #turn lats and longs into panda series. Append them to the dataframe.
-    df['lons'] = pd.Series(lons)
-    df['lats'] = pd.Series(lats)
-    df = df.drop('coordinates', 1)
-    df = df.drop_duplicates().reset_index(drop = True)
-    #don't pickle with text!! Values go missing for some reason. 
-    return df 
-
-def pop_text(df):
-    '''removes a pesky column of text of tweets'''
-    tweet_text_df = no_dup[['text', 'id']]
-    no_dup.pop('text')
-
-#TEXT MANIPULATIO OF TWITTER DATA
-
-#A. remove punctuation
-def clean_text_for_sql(df):
-    '''Takes in a dataframe with a text column containing emoticons, ect. 
-    Returns a dataframe where the text has been striped of punctuation and repeats
-    Orders columns in this format: timestamp_ms, text, lats, lons'''
-    
-    df = extract_columns(df)
-    df['text'] = [re.sub('[^A-Za-z0-9]+', ' ',s)for s in df.text.tolist()]
-    df.columns.tolist()          
-    ordered_colums = [ 'timestamp_ms', 'text', 'lats', 'lons' ]
-    
-    return df[ordered_colums]
+#TEXT MANIPULATION OF TWITTER DATA
 
 #B. tokenize with a twitter-specific tokenizer
 def twokenize_text(df, outfile = '/Users/christy/Documents/root/repos/media_mapper/data_pipeline/data/intermediate_data/jsontweets_in_df_twitokend.csv'):
     '''Takes in a dataframe with a text column containing emoticons, ect. 
-    Returns a dataframe where the text has been striped of punctuation and repeats
-    Also reorders the columns to fit the order I want for SQL'''
+    Applies a twitter specific tokenizer, and saves the dataframe. 
+    '''
+    
     df['text'] = [twokenizer.simpleTokenize(s) for s in df.text.tolist()]
-    df.columns.tolist()          
-    ordered_colums = ['id','text']
-    df = df[ordered_colums]
     df.to_csv(outfile)
-    return df
+    
 
 #C. use the general nltk library 
 def tokenize_text_nltk(text):
     '''Tokenizes a sting with the nltk library. 
     To apply function to an entire dataframe: df['text'] = df.text.apply(tokenize_text_nltk)'''
+    
     punct = string.punctuation
     stop_words = stopwords.words('english')
     text_list = []
@@ -138,12 +73,14 @@ def tokenize_text_nltk(text):
     return text_lisy
 
 
-
-
 #ADD DATE VARIABLES TO A DATAFRAME FROM A TIMESTAMP 
 
 def transform_timestamp(df, date = True, hour = False, DOW = False ):
-    """Takes a dataframe with a 'timestamp_ms' column. Creates additional columns of date, hour, or day of week.
+    """
+    PARAMETERS
+    df - A dataframe with a 'timestamp_ms' column. C
+    Creates additional columns of date, hour, or day of week (DOW).
+    
     Returns the dataframe with added columns."""
 
     df['time'] = df['timestamp_ms'].values.astype(int).astype('datetime64[ms]')
@@ -155,8 +92,7 @@ def transform_timestamp(df, date = True, hour = False, DOW = False ):
     return df
 
 
-
-#HANDY PLOTTING FUNCTIONS
+#PLOTTING FUNCTIONS
 
 def plot_neighborhoods(df,  column_labels='geoid10', x_colname ='hour', y_colname ='tweet_cnt'):
     '''Takes a dataframe with groups to plot as a color dimentions. 
@@ -194,27 +130,5 @@ def merge_shapes_with_dataframe(df):
     df = pd.merge(geo_df, df, on='geoid10', how='outer')
     return df
 
-#CLUSTERING FUNCTIONS
-
-def dummy_time_variables(df, dow = False, hr = False):
-    '''Takes a dataframe with a dow and or hour column. Adds dummy variables relating to day of week and or hour. 
-    Returns new dataframe.'''
-    if dow == True:
-        dfdow = pd.get_dummies(df.DOW, prefix = 'dow')
-        dfdow.drop('dow_0', 1, inplace = True)
-        if hr == False:
-            dfdow['geoid'] = df['geoid10', 'twt_cnt']
-            return dfdow
-        else: pass 
-    if hr == True:
-        dfhour = pd.get_dummies(df.hour, prefix = 'hr')
-        dfhour.drop('hr_0', 1, inplace = True)
-        dfhour['geoid'] = df['geoid10']
-        dfhour['twt_cnt'] = df['twt_cnt']
-        if dow == False:
-            return dfhour
-        else:
-            df = pd.concat([dfdow,dfhour],axis = 1)
-            return df
 
 

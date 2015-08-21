@@ -42,7 +42,6 @@ def create_maps():
     stopwords.extend([str(char) for char in punctuation])
     sstopwords=[unicode(word) for word in stopwords]
 
-
     #get the most frequent words for visualization
     dfwkday['top_ten'] = dfwkday.tokens.apply(top_tokens)
     df_weeknd['top_ten'] = df_weeknd.tokens.apply(top_tokens)
@@ -57,8 +56,8 @@ def create_maps():
 
 
 def get_tweets_per_day(df):
-    ''' INPUT: a dataframe with tweets tagged with time information.
-        OUTPUT: a transformed dataframe, where dataframe has been grouped by date
+    ''' Takes a a dataframe with tweets tagged with time information.
+        Returns a transformed dataframe, where dataframe has been grouped by date
         to obtain the rate of tweets per day. '''
     
     #set a count of tweets to determine tweet rate
@@ -75,10 +74,14 @@ def get_tweets_per_day(df):
     return dfh
 
 def seperate_weekends(df, weekend = True):
-    '''Takes a dataframe with a column marked with the day of week.
-    If weekend is True, returns a dataframe with just the weekend values
-    If false, returns a dataframe with just the weekday values.
-    Performs groupby to get mean tweet per day based on this grouping.'''
+    '''
+    PARAMETERS:
+    df - A dataframe with a column marked with the day of week.
+    weeekend -  If weekend is True, returns a dataframe with just the weekend values
+                If false, returns a dataframe with just the weekday values.
+    
+    OUTPUT:
+    Performs groupby to get mean tweet per day. Returns the edited dataframe.'''
     if weekend == True:
         daysofweek = [6,7]
     else:
@@ -88,8 +91,7 @@ def seperate_weekends(df, weekend = True):
     dfweek_txt = df.groupby('geoid10')['tokens'].apply(lambda x: ','.join(x)).reset_index()
     #merge these two dataframes together
     dfweek['tokens'] = dfweek_txt['tokens']
-
-
+    return df_week
 
 def retrieve_geometry_information(df):
     '''Obtains the geometry data for each geoid10. 
@@ -109,17 +111,21 @@ def retrieve_geometry_information(df):
     weekdf.dropna(subset = ['tpd'], inplace = True)
     return weekdf
 
-
-
 def top_tokens(corpus_list, stopwords= stopwords, number=10):
+    '''
+    Takes a list of tokens. Returns the most frequent words specifed by number.
 
-    '''Takes a list of tokens. Returns the top ten, unless a different number given.'''
-
+    PARAMETERS:
+    corpus_list - Takes a list of tokens.
+    stopwords - A list of common words to remove from word count.
+    number - How many most frequent words should be returned. 
+    '''
     #Checks to make sure the tokens are in a list, and not a string
     tokens = literal_eval(corpus_list)
     #If there are multiple tweets, flatten the list
     if type(tokens) ==tuple:
         tokens =[item for sublist in tokens for item in sublist]  
+    
     allWordExceptStopDist = nltk.FreqDist(w.lower() for w in tokens if w not in stopwords) 
     mostCommon= allWordExceptStopDist.most_common(number)
     top_ten_string = ' '.join([tup[0] for tup in mostCommon])
@@ -141,7 +147,7 @@ def add_properties_geo(row):
 
 def dataframe_to_geojson(df, outfilename):
     '''Takes in a dataframe with a count, geoid10, and list of tokens. 
-    Dumps it into a geojson file for mapping.ß'''
+    Dumps it into a geojson file for mapping.'''
     
     df['geoid10'] = df['geoid10'].astype('str')
     df["tpd"] = df['tpd'].astype('str')

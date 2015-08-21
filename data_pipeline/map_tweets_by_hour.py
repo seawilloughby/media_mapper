@@ -29,7 +29,6 @@ def create_maps():
 	                '@','.', 'co', 'com','amp', 'via','http','htt','https', '()',']'])
 	sstopwords=[unicode(word) for word in stopwords]
 
-
 	#break dataframe into four hour chunks of time throughout the day
 	df_hour = tweets_by_hour(df)
 	#obtain geometry data for each geoid for mapping 
@@ -46,10 +45,10 @@ def create_maps():
 
 def get_tweet_rate(df):
     '''
-    INPUT: a dataframe with tweets tagged with time information.
-    OUTPUT: a transformed dataframe, where dataframe has been grouped
-        to obtain the rate of tweets per hour for each day.
-        Tokenized tweet text for every hour has been appended to one mater list.'''
+    Takes a dataframe with tweets tagged with time information.
+    Returns the transformed dataframe, where dataframe has been grouped
+    to obtain the rate of tweets per hour for each day.
+    Tokenized tweet text for every hour has been appended to one master list.'''
     
     #set a count of tweets to determine tweet rate
     df['tweetcnt'] = 1
@@ -102,13 +101,23 @@ def retrieve_geometry_information(df):
 
 def top_tokens(corpus_list, stopwords= stopwords, number=10):
 
-    '''Takes a list of tokens. Returns the top ten, unless a different number given.'''
+    '''
+    Takes a list of tokens. Returns the most frequent words specifed by number.
+
+    PARAMETERS:
+    corpus_list - Takes a list of tokens.
+    stopwords - A list of common words to remove from word count.
+    number - How many most frequent words should be returned. 
+    '''
 
     #Checks to make sure the tokens are in a list, and not a string
     tokens = literal_eval(corpus_list)
+    
     #If there are multiple tweets, flatten the list
     if type(tokens) ==tuple:
         tokens =[item for sublist in tokens for item in sublist]  
+    
+    #calculate the most common words
     allWordExceptStopDist = nltk.FreqDist(w.lower() for w in tokens if w not in stopwords) 
     mostCommon= allWordExceptStopDist.most_common(number)
     top_ten_string = ' '.join([tup[0] for tup in mostCommon])
